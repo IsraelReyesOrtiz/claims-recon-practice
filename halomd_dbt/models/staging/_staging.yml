@@ -18,7 +18,7 @@ models:
       - name: claim_status
         tests:
           - accepted_values:
-              arguments: {values: ['SUBMITTED', 'PAID', 'DENIED', 'VOID']}
+              arguments: {values: ['SUBMITTED', 'PAID', 'DENIED']}
   - name: stg_remittances
     description: "835 remittance lines; reversals carry negative paid_amount."
     columns:
