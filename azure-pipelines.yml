@@ -1,0 +1,28 @@
+# Variante Azure DevOps contra Snowflake. Requiere un Variable Group "snowflake-ci"
+# con SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER y SNOWFLAKE_PASSWORD (marcado como secreto).
+trigger: none
+pr:
+  branches:
+    include: [ main ]
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: snowflake-ci
+
+steps:
+  - task: UsePythonVersion@0
+    inputs: { versionSpec: '3.11' }
+
+  - script: pip install dbt-snowflake
+    displayName: Install dbt
+
+  - script: |
+      cd halomd_dbt
+      dbt deps
+      dbt build --profiles-dir . --target snowflake
+    displayName: dbt build (PR)
+    env:
+      SNOWFLAKE_PASSWORD: $(SNOWFLAKE_PASSWORD)   # los secretos NO se exponen solos: hay que mapearlos
+      DBT_SCHEMA: pr_$(System.PullRequest.PullRequestId)

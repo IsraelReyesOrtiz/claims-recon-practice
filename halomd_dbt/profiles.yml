@@ -1,0 +1,17 @@
+halomd_dbt:
+  target: ci
+  outputs:
+    ci:
+      type: duckdb
+      path: halomd.duckdb
+      threads: 4
+    snowflake:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      private_key_path: "{{ env_var('HOME') }}/.snowflake/rsa_key.p8"
+      role: HALOMD_TRANSFORMER
+      warehouse: WH_HALOMD_XS
+      database: HALOMD_DEV
+      schema: "{{ env_var('DBT_SCHEMA', 'DBT_IREYES') }}"
+      threads: 4

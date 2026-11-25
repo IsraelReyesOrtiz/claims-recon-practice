@@ -1,0 +1,10 @@
+data/
+halomd_dbt/target/
+halomd_dbt/logs/
+halomd_dbt/*.duckdb
+.venv/
+t6/recon_exceptions.csv
+halomd_dbt/.user.yml
+__pycache__/
+.pytest_cache/
+*.zip

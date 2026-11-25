@@ -1,0 +1,25 @@
+name: dbt CI
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  dbt-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install
+        run: pip install dbt-duckdb pandas numpy
+      - name: Generate synthetic data
+        run: python generate_dataset_v2.py --claims 30000 --seed 7
+      - name: dbt build
+        working-directory: halomd_dbt
+        run: dbt build --profiles-dir . --target ci
+      - name: Upload artifacts (manifest, run_results)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-target
+          path: halomd_dbt/target/*.json

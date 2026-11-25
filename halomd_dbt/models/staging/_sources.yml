@@ -1,0 +1,22 @@
+version: 2
+sources:
+  - name: raw
+    description: "Synthetic raw files landed from the source system, Snowflake load and 835 remittances."
+    schema: "{{ 'RAW' if target.type == 'snowflake' else 'main' }}"
+    config:
+      external_location: "read_csv_auto('../data/{name}.csv')"
+    tables:
+      - name: sf_claims_raw
+        description: "Claims as loaded into Snowflake. Grain: one row per claim per load (may contain duplicates)."
+        columns:
+          - name: claim_id
+            tests: [not_null]
+      - name: remittances
+        description: "835 remittance lines. Grain: one row per remittance line (payments, denials, reversals)."
+        columns:
+          - name: remit_line_id
+            tests: [unique, not_null]
+      - name: payers
+        columns:
+          - name: payer_id
+            tests: [unique, not_null]

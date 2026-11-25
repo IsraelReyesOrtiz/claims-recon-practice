@@ -1,0 +1,27 @@
+version: 2
+models:
+  - name: fct_claim_payment
+    description: "One row per claim with net paid (payments + partials + reversals) and prompt-pay compliance."
+    columns:
+      - name: claim_id
+        description: "Business key of the claim. Grain of this table."
+        tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments: {to: ref('stg_claims'), field: claim_id}
+      - name: billed_amount
+        description: "Amount the provider charged (list price)."
+      - name: allowed_amount
+        description: "Amount the payer recognized as valid on the original PAYMENT line."
+      - name: net_paid
+        description: "Sum of all 835 paid amounts for the claim: payments + partials - reversals."
+      - name: reversed_amount
+        description: "Total taken back by the payer (negative)."
+      - name: days_to_first_payment
+        description: "Days between claim submission and the first PAYMENT line."
+      - name: is_late_payment
+        description: "True when the first payment arrived after the payer's prompt-pay window. Null if not paid yet."
+        tests:
+          - accepted_values:
+              arguments: {values: [true, false], quote: false}

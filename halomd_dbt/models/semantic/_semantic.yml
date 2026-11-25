@@ -1,0 +1,93 @@
+version: 2
+
+models:
+  - name: metricflow_time_spine
+    description: "Daily date spine required by the dbt Semantic Layer."
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        granularity: day
+
+semantic_models:
+  - name: claim_payments
+    description: "Claim-level payment facts. Grain: one row per claim."
+    model: ref('fct_claim_payment')
+    defaults:
+      agg_time_dimension: submitted_date
+    entities:
+      - name: claim
+        type: primary
+        expr: claim_id
+      - name: payer
+        type: foreign
+        expr: payer_id
+      - name: provider
+        type: foreign
+        expr: provider_id
+    dimensions:
+      - name: submitted_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: claim_status
+        type: categorical
+      - name: is_late_payment
+        type: categorical
+    measures:
+      - name: claim_count
+        agg: count
+        expr: claim_id
+      - name: billed_amount
+        agg: sum
+      - name: net_paid
+        agg: sum
+      - name: paid_claim_count
+        agg: count
+        expr: case when first_payment_date is not null then claim_id end
+      - name: late_paid_claim_count
+        agg: count
+        expr: case when is_late_payment then claim_id end
+
+metrics:
+  - name: total_billed
+    label: "Total Billed"
+    description: "Sum of amounts billed by providers."
+    type: simple
+    type_params:
+      measure: billed_amount
+
+  - name: total_net_paid
+    label: "Net Paid"
+    description: "Payments + partials - reversals."
+    type: simple
+    type_params:
+      measure: net_paid
+
+  - name: collection_rate
+    label: "Collection Rate"
+    description: "Net paid as a share of billed."
+    type: ratio
+    type_params:
+      numerator: total_net_paid
+      denominator: total_billed
+
+  - name: late_paid_claims
+    label: "Late Paid Claims"
+    type: simple
+    type_params:
+      measure: late_paid_claim_count
+
+  - name: paid_claims
+    label: "Paid Claims"
+    type: simple
+    type_params:
+      measure: paid_claim_count
+
+  - name: late_payment_rate
+    label: "Late Payment Rate"
+    description: "Share of paid claims whose first payment arrived after the prompt-pay window."
+    type: ratio
+    type_params:
+      numerator: late_paid_claims
+      denominator: paid_claims
